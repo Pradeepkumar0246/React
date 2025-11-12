@@ -1,0 +1,12 @@
+wwwroot\company\Logo.png
+wwwroot\uploads\payslips\EMP001\Payslip_EMP001_Nov2025.pdf
+wwwroot\uploads\profiles\EMP005_b0134710-0409-4caf-9d23-a75e71dbac63.jpg
+wwwroot\uploads\payslips\EMP002\Payslip_EMP002_Nov2025.pdf
+wwwroot\uploads\payslips\EMP003\Payslip_EMP003_Nov2025.pdf
+wwwroot\uploads\documents\EMP005\IDProof\8f22eed1-29ad-415b-93b0-100407ad54f8_Emp_ID_Proof.pdf
+wwwroot\uploads\documents\EMP004\Education\dc6509d6-0a62-490b-a5fd-e29da5df3ad0_Emp_Education_Certificate.pdf
+wwwroot\uploads\documents\EMP005\Education\4a8023ed-770d-4d6d-974d-a77c6f454bb6_Emp_Education_Certificate.pdf
+wwwroot\uploads\payslips\EMP005\Payslip_EMP005_Nov2025.pdf
+wwwroot\uploads\payslips\EMP005\Payslip_EMP005_Oct2025.pdf
+wwwroot\uploads\documents\EMP005\Skill\263ce1e2-8b66-4ea0-b5c6-4f2ee31ae196_Emp_Skills_Certificate.pdf
+wwwroot\uploads\profiles\EMP004_97a23a67-9189-4886-bf27-94384653edc0.jpg
