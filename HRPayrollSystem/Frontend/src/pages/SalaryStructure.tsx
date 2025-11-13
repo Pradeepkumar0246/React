@@ -4,6 +4,7 @@ import { Add, Edit, AttachMoney, Search } from '@mui/icons-material';
 import { useAuth } from '../auth/AuthContext';
 import { salaryStructureService } from '../services/salaryStructureService';
 import { employeeService } from '../services/employeeService';
+import { validateRequired, validatePositiveNumber } from '../utils/validation';
 import type { SalaryStructure, SalaryStructureFilters } from '../types/salaryStructure';
 import type { Employee } from '../types/employee';
 
@@ -19,6 +20,7 @@ const SalaryStructurePage: React.FC = () => {
   const [openForm, setOpenForm] = useState(false);
   const [editStructure, setEditStructure] = useState<SalaryStructure | null>(null);
   const [form, setForm] = useState<FormState>({ employeeId: '', basicSalary: '', hra: '', allowances: '', deductions: '', pf: '', tax: '' });
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
 
   useEffect(() => { loadData(); }, []);
 
@@ -148,12 +150,12 @@ const SalaryStructurePage: React.FC = () => {
         <DialogContent>
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mt: 1 }}>
             <FormControl sx={{ gridColumn: '1 / -1' }}><InputLabel>Employee</InputLabel><Select value={form.employeeId} label="Employee" onChange={(e) => setForm(s => ({ ...s, employeeId: e.target.value }))} disabled={!!editStructure}>{employees.map((e) => <MenuItem key={e.employeeId} value={e.employeeId}>{e.fullName}</MenuItem>)}</Select></FormControl>
-            <TextField type="number" label="Basic Salary" value={form.basicSalary} onChange={(e) => setForm(s => ({ ...s, basicSalary: e.target.value }))} />
-            <TextField type="number" label="HRA" value={form.hra} onChange={(e) => setForm(s => ({ ...s, hra: e.target.value }))} />
-            <TextField type="number" label="Allowances" value={form.allowances} onChange={(e) => setForm(s => ({ ...s, allowances: e.target.value }))} />
-            <TextField type="number" label="Deductions" value={form.deductions} onChange={(e) => setForm(s => ({ ...s, deductions: e.target.value }))} />
-            <TextField type="number" label="PF" value={form.pf} onChange={(e) => setForm(s => ({ ...s, pf: e.target.value }))} />
-            <TextField type="number" label="Tax" value={form.tax} onChange={(e) => setForm(s => ({ ...s, tax: e.target.value }))} />
+            <TextField type="number" label="Basic Salary" value={form.basicSalary} onChange={(e) => { setForm(s => ({ ...s, basicSalary: e.target.value })); if (errors.basicSalary) setErrors(prev => ({...prev, basicSalary: ''})); }} onBlur={() => { const error = validateRequired(form.basicSalary, 'Basic Salary') || validatePositiveNumber(parseFloat(form.basicSalary) || 0, 'Basic Salary'); if (error) setErrors(prev => ({...prev, basicSalary: error})); }} error={!!errors.basicSalary} helperText={errors.basicSalary} required />
+            <TextField type="number" label="HRA" value={form.hra} onChange={(e) => { setForm(s => ({ ...s, hra: e.target.value })); if (errors.hra) setErrors(prev => ({...prev, hra: ''})); }} onBlur={() => { const error = validatePositiveNumber(parseFloat(form.hra) || 0, 'HRA'); if (error) setErrors(prev => ({...prev, hra: error})); }} error={!!errors.hra} helperText={errors.hra} />
+            <TextField type="number" label="Allowances" value={form.allowances} onChange={(e) => { setForm(s => ({ ...s, allowances: e.target.value })); if (errors.allowances) setErrors(prev => ({...prev, allowances: ''})); }} onBlur={() => { const error = validatePositiveNumber(parseFloat(form.allowances) || 0, 'Allowances'); if (error) setErrors(prev => ({...prev, allowances: error})); }} error={!!errors.allowances} helperText={errors.allowances} />
+            <TextField type="number" label="Deductions" value={form.deductions} onChange={(e) => { setForm(s => ({ ...s, deductions: e.target.value })); if (errors.deductions) setErrors(prev => ({...prev, deductions: ''})); }} onBlur={() => { const error = validatePositiveNumber(parseFloat(form.deductions) || 0, 'Deductions'); if (error) setErrors(prev => ({...prev, deductions: error})); }} error={!!errors.deductions} helperText={errors.deductions} />
+            <TextField type="number" label="PF" value={form.pf} onChange={(e) => { setForm(s => ({ ...s, pf: e.target.value })); if (errors.pf) setErrors(prev => ({...prev, pf: ''})); }} onBlur={() => { const error = validatePositiveNumber(parseFloat(form.pf) || 0, 'PF'); if (error) setErrors(prev => ({...prev, pf: error})); }} error={!!errors.pf} helperText={errors.pf} />
+            <TextField type="number" label="Tax" value={form.tax} onChange={(e) => { setForm(s => ({ ...s, tax: e.target.value })); if (errors.tax) setErrors(prev => ({...prev, tax: ''})); }} onBlur={() => { const error = validatePositiveNumber(parseFloat(form.tax) || 0, 'Tax'); if (error) setErrors(prev => ({...prev, tax: error})); }} error={!!errors.tax} helperText={errors.tax} />
             <Box sx={{ gridColumn: '1 / -1', p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
               <Typography variant="h6" color="primary">Calculated Net Salary: ₹{currentNetSalary.toLocaleString()}</Typography>
               <Typography variant="body2" color="text.secondary">Basic + HRA + Allowances - Deductions - PF - Tax</Typography>

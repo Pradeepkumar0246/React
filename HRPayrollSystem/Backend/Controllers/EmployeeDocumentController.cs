@@ -115,7 +115,7 @@ namespace HRPayrollSystem_Payslip.Controllers
 
                 var createdDocument = await _employeeDocumentService.CreateDocumentAsync(employeeDocumentCreateDto);
                 _logger.LogInformation("Document {DocumentId} created successfully for employee {EmployeeId}", createdDocument.DocumentId, employeeDocumentCreateDto.EmployeeId);
-                return CreatedAtAction(nameof(GetDocumentById), new { id = createdDocument.DocumentId }, createdDocument);
+                return CreatedAtAction(nameof(GetDocumentById), new { id = createdDocument.DocumentId }, new { message = "Document uploaded successfully", result = createdDocument });
             }
             catch (KeyNotFoundException ex)
             {
@@ -153,7 +153,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 }
 
                 var updatedDocument = await _employeeDocumentService.UpdateDocumentAsync(employeeDocumentUpdateDto);
-                return Ok(updatedDocument);
+                return Ok(new { message = "Document updated successfully", result = updatedDocument });
             }
             catch (KeyNotFoundException ex)
             {
@@ -184,7 +184,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 if (result)
                 {
                     _logger.LogInformation("Document {DocumentId} deleted successfully", id);
-                    return NoContent();
+                    return Ok(new { message = "Document deleted successfully" });
                 }
 
                 _logger.LogWarning("Document {DocumentId} not found for deletion", id);

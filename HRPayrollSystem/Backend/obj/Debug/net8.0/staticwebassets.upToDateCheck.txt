@@ -10,3 +10,5 @@ wwwroot\uploads\payslips\EMP005\Payslip_EMP005_Nov2025.pdf
 wwwroot\uploads\payslips\EMP005\Payslip_EMP005_Oct2025.pdf
 wwwroot\uploads\documents\EMP005\Skill\263ce1e2-8b66-4ea0-b5c6-4f2ee31ae196_Emp_Skills_Certificate.pdf
 wwwroot\uploads\profiles\EMP004_97a23a67-9189-4886-bf27-94384653edc0.jpg
+wwwroot\uploads\payslips\EMP006\Payslip_EMP006_Nov2025.pdf
+wwwroot\uploads\documents\EMP006\Skill\ad1cbc03-1358-4280-afc0-02d3e6f8fd93_Pradeepkumar_Venture Capitalist.pdf

@@ -30,6 +30,7 @@ import {
 import { Add, Delete, Edit, Visibility, Search } from "@mui/icons-material";
 import { useAuth } from "../auth/AuthContext";
 import { employeeService } from "../services/employeeService";
+import { validateEmail, validateMobileNumber, validateRequired, validateStringLength, validateLettersOnly, validatePassword, validateFileSize, validateFileType } from "../utils/validation";
 import type {
   Employee,
   EmployeeFilters,
@@ -87,6 +88,8 @@ const Employees: React.FC = () => {
     reportingManagerId: "",
   });
   const [file, setFile] = useState<File | null>(null);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -187,8 +190,56 @@ const Employees: React.FC = () => {
     setOpenForm(true);
   };
 
+  const validateForm = (): boolean => {
+    const newErrors: {[key: string]: string} = {};
+    
+    // Validate required fields
+    const firstNameError = validateRequired(form.firstName, 'First Name') || validateStringLength(form.firstName, 2, 50, 'First Name') || validateLettersOnly(form.firstName, 'First Name');
+    if (firstNameError) newErrors.firstName = firstNameError;
+    
+    const lastNameError = validateRequired(form.lastName, 'Last Name') || validateStringLength(form.lastName, 2, 50, 'Last Name') || validateLettersOnly(form.lastName, 'Last Name');
+    if (lastNameError) newErrors.lastName = lastNameError;
+    
+    const mobileError = validateMobileNumber(form.mobileNumber);
+    if (mobileError) newErrors.mobileNumber = mobileError;
+    
+    const personalEmailError = validateEmail(form.personalEmail);
+    if (personalEmailError) newErrors.personalEmail = personalEmailError;
+    
+    const officeEmailError = validateEmail(form.officeEmail);
+    if (officeEmailError) newErrors.officeEmail = officeEmailError;
+    
+    const deptError = validateRequired(form.departmentId, 'Department');
+    if (deptError) newErrors.departmentId = deptError;
+    
+    const roleError = validateRequired(form.roleId, 'Role');
+    if (roleError) newErrors.roleId = roleError;
+    
+    const dateError = validateRequired(form.dateOfJoining, 'Date of Joining');
+    if (dateError) newErrors.dateOfJoining = dateError;
+    
+    if (!editEmployee) {
+      const passwordError = validatePassword(form.password);
+      if (passwordError) newErrors.password = passwordError;
+    }
+    
+    if (file) {
+      const fileSizeError = validateFileSize(file, 5);
+      if (fileSizeError) newErrors.file = fileSizeError;
+      
+      const fileTypeError = validateFileType(file, ['jpg', 'jpeg', 'png', 'gif']);
+      if (fileTypeError) newErrors.file = fileTypeError;
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async () => {
+    if (!validateForm()) return;
+    
     try {
+      setIsSubmitting(true);
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
       if (file) fd.append("profilePicture", file);
@@ -197,8 +248,11 @@ const Employees: React.FC = () => {
       else await employeeService.createEmployee(fd);
       await loadData();
       setOpenForm(false);
+      setErrors({});
     } catch (err) {
       console.error("Save failed:", err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -487,48 +541,89 @@ const Employees: React.FC = () => {
             <TextField
               label="First Name"
               value={form.firstName}
-              onChange={(e) =>
-                setForm((s) => ({ ...s, firstName: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((s) => ({ ...s, firstName: e.target.value }));
+                if (errors.firstName) setErrors(prev => ({...prev, firstName: ''}));
+              }}
+              onBlur={() => {
+                const error = validateRequired(form.firstName, 'First Name') || validateStringLength(form.firstName, 2, 50, 'First Name') || validateLettersOnly(form.firstName, 'First Name');
+                if (error) setErrors(prev => ({...prev, firstName: error}));
+              }}
+              error={!!errors.firstName}
+              helperText={errors.firstName}
+              required
             />
             <TextField
               label="Last Name"
               value={form.lastName}
-              onChange={(e) =>
-                setForm((s) => ({ ...s, lastName: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((s) => ({ ...s, lastName: e.target.value }));
+                if (errors.lastName) setErrors(prev => ({...prev, lastName: ''}));
+              }}
+              onBlur={() => {
+                const error = validateRequired(form.lastName, 'Last Name') || validateStringLength(form.lastName, 2, 50, 'Last Name') || validateLettersOnly(form.lastName, 'Last Name');
+                if (error) setErrors(prev => ({...prev, lastName: error}));
+              }}
+              error={!!errors.lastName}
+              helperText={errors.lastName}
+              required
             />
             <TextField
               label="Mobile Number"
               value={form.mobileNumber}
-              onChange={(e) =>
-                setForm((s) => ({ ...s, mobileNumber: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((s) => ({ ...s, mobileNumber: e.target.value }));
+                if (errors.mobileNumber) setErrors(prev => ({...prev, mobileNumber: ''}));
+              }}
+              onBlur={() => {
+                const error = validateMobileNumber(form.mobileNumber);
+                if (error) setErrors(prev => ({...prev, mobileNumber: error}));
+              }}
+              error={!!errors.mobileNumber}
+              helperText={errors.mobileNumber}
+              required
             />
             <TextField
               label="Personal Email"
               type="email"
               value={form.personalEmail}
-              onChange={(e) =>
-                setForm((s) => ({ ...s, personalEmail: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((s) => ({ ...s, personalEmail: e.target.value }));
+                if (errors.personalEmail) setErrors(prev => ({...prev, personalEmail: ''}));
+              }}
+              onBlur={() => {
+                const error = validateEmail(form.personalEmail);
+                if (error) setErrors(prev => ({...prev, personalEmail: error}));
+              }}
+              error={!!errors.personalEmail}
+              helperText={errors.personalEmail}
+              required
             />
             <TextField
               label="Office Email"
               type="email"
               value={form.officeEmail}
-              onChange={(e) =>
-                setForm((s) => ({ ...s, officeEmail: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((s) => ({ ...s, officeEmail: e.target.value }));
+                if (errors.officeEmail) setErrors(prev => ({...prev, officeEmail: ''}));
+              }}
+              onBlur={() => {
+                const error = validateEmail(form.officeEmail);
+                if (error) setErrors(prev => ({...prev, officeEmail: error}));
+              }}
+              error={!!errors.officeEmail}
+              helperText={errors.officeEmail}
+              required
             />
-            <FormControl>
-              <InputLabel>Department</InputLabel>
+            <FormControl error={!!errors.departmentId}>
+              <InputLabel>Department *</InputLabel>
               <Select
                 value={form.departmentId}
-                label="Department"
-                onChange={(e) =>
-                  setForm((s) => ({ ...s, departmentId: e.target.value }))
-                }
+                label="Department *"
+                onChange={(e) => {
+                  setForm((s) => ({ ...s, departmentId: e.target.value }));
+                  if (errors.departmentId) setErrors(prev => ({...prev, departmentId: ''}));
+                }}
               >
                 {departments.map((d) => (
                   <MenuItem key={d.departmentId} value={String(d.departmentId)}>
@@ -537,14 +632,15 @@ const Employees: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
-            <FormControl>
-              <InputLabel>Role</InputLabel>
+            <FormControl error={!!errors.roleId}>
+              <InputLabel>Role *</InputLabel>
               <Select
                 value={form.roleId}
-                label="Role"
-                onChange={(e) =>
-                  setForm((s) => ({ ...s, roleId: e.target.value }))
-                }
+                label="Role *"
+                onChange={(e) => {
+                  setForm((s) => ({ ...s, roleId: e.target.value }));
+                  if (errors.roleId) setErrors(prev => ({...prev, roleId: ''}));
+                }}
               >
                 {roles.map((r) => (
                   <MenuItem key={r.roleId} value={String(r.roleId)}>
@@ -572,19 +668,31 @@ const Employees: React.FC = () => {
               type="date"
               label="Date of Joining"
               value={form.dateOfJoining}
-              onChange={(e) =>
-                setForm((s) => ({ ...s, dateOfJoining: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((s) => ({ ...s, dateOfJoining: e.target.value }));
+                if (errors.dateOfJoining) setErrors(prev => ({...prev, dateOfJoining: ''}));
+              }}
+              error={!!errors.dateOfJoining}
+              helperText={errors.dateOfJoining}
               InputLabelProps={{ shrink: true }}
+              required
             />
             {!editEmployee && (
               <TextField
                 type="password"
                 label="Password"
                 value={form.password}
-                onChange={(e) =>
-                  setForm((s) => ({ ...s, password: e.target.value }))
-                }
+                onChange={(e) => {
+                  setForm((s) => ({ ...s, password: e.target.value }));
+                  if (errors.password) setErrors(prev => ({...prev, password: ''}));
+                }}
+                onBlur={() => {
+                  const error = validatePassword(form.password);
+                  if (error) setErrors(prev => ({...prev, password: error}));
+                }}
+                error={!!errors.password}
+                helperText={errors.password}
+                required
               />
             )}
             <FormControl>
@@ -606,16 +714,22 @@ const Employees: React.FC = () => {
             </FormControl>
             <TextField
               type="file"
+              label="Profile Picture"
               InputLabelProps={{ shrink: true }}
               inputProps={{ accept: "image/*" }}
-              onChange={(e) => setFile((e.target as HTMLInputElement).files?.[0] ?? null)}
+              onChange={(e) => {
+                setFile((e.target as HTMLInputElement).files?.[0] ?? null);
+                if (errors.file) setErrors(prev => ({...prev, file: ''}));
+              }}
+              error={!!errors.file}
+              helperText={errors.file || 'JPG, PNG, GIF only. Max 5MB'}
             />
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenForm(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmit}>
-            {editEmployee ? "Update" : "Create"}
+          <Button variant="contained" onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : (editEmployee ? "Update" : "Create")}
           </Button>
         </DialogActions>
       </Dialog>

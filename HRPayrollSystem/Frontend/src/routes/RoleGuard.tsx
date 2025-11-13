@@ -9,18 +9,25 @@ interface RoleGuardProps {
 }
 
 const RoleGuard: React.FC<RoleGuardProps> = ({ children, allowedRoles, redirectTo }) => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const location = useLocation();
+  
+  // Wait for auth to load
+  if (isLoading || !user) {
+    return <div>Loading...</div>;
+  }
+  
+  console.log('RoleGuard - User role:', user.role);
   const isHR = user?.role === 'Admin' || user?.role === 'HR Manager';
   const isEmployee = !isHR;
+  console.log('RoleGuard - isHR:', isHR, 'isEmployee:', isEmployee);
 
   // Employee route redirects
   if (isEmployee) {
     const employeeRedirects: { [key: string]: string } = {
       '/payroll': '/employee/payroll',
       '/leave-requests': '/employee/leave-requests', 
-      '/documents': '/employee/documents',
-      '/attendance': '/employee/dashboard'
+      '/documents': '/employee/documents'
     };
 
     if (employeeRedirects[location.pathname]) {

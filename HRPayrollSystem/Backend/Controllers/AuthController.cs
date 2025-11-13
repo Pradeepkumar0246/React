@@ -26,7 +26,7 @@ namespace HRPayrollSystem_Payslip.Controllers
             if (result == null)
                 return Unauthorized(new { message = "Invalid email or password" });
 
-            return Ok(result);
+            return Ok(new { message ="login successful",result});
         }
     }
 }

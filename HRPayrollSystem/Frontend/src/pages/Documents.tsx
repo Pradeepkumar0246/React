@@ -4,6 +4,7 @@ import { Add, Edit, Delete, Download, Description, CloudUpload, Search } from '@
 import { useAuth } from '../auth/AuthContext';
 import { documentService } from '../services/documentService';
 import { employeeService } from '../services/employeeService';
+import { validateRequired, validateFileSize, validateFileType } from '../utils/validation';
 import type { Document, DocumentFilters } from '../types/document';
 import type { Employee } from '../types/employee';
 
@@ -19,6 +20,7 @@ const DocumentsPage: React.FC = () => {
   const [openForm, setOpenForm] = useState(false);
   const [editDocument, setEditDocument] = useState<Document | null>(null);
   const [form, setForm] = useState<FormState>({ employeeId: '', category: '', file: null });
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
 
   const categories = ['IDProof', 'Experience', 'Skill', 'Education', 'Contract', 'Offer', 'Medical'];
 
@@ -162,15 +164,13 @@ const DocumentsPage: React.FC = () => {
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <FormControl><InputLabel>Employee</InputLabel><Select value={form.employeeId} label="Employee" onChange={(e) => setForm(s => ({ ...s, employeeId: e.target.value }))} disabled={!isAdmin}>{employees.map((e) => <MenuItem key={e.employeeId} value={e.employeeId}>{e.fullName}</MenuItem>)}</Select></FormControl>
-            <FormControl><InputLabel>Category</InputLabel><Select value={form.category} label="Category" onChange={(e) => setForm(s => ({ ...s, category: e.target.value }))}>{categories.map((cat) => <MenuItem key={cat} value={cat}>{cat}</MenuItem>)}</Select></FormControl>
+            <FormControl error={!!errors.category}><InputLabel>Category</InputLabel><Select value={form.category} label="Category" onChange={(e) => { setForm(s => ({ ...s, category: e.target.value })); if (errors.category) setErrors(prev => ({...prev, category: ''})); }} onBlur={() => { const error = validateRequired(form.category, 'Category'); if (error) setErrors(prev => ({...prev, category: error})); }}>{categories.map((cat) => <MenuItem key={cat} value={cat}>{cat}</MenuItem>)}</Select></FormControl>
             <Box>
               <Button variant="outlined" component="label" startIcon={<CloudUpload />} fullWidth sx={{ p: 2, borderStyle: 'dashed' }}>
                 {form.file ? form.file.name : editDocument ? 'Replace File (Optional)' : 'Select File'}
-                <input type="file" hidden onChange={(e) => setForm(s => ({ ...s, file: e.target.files?.[0] || null }))} accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" />
+                <input type="file" hidden onChange={(e) => { const file = e.target.files?.[0] || null; setForm(s => ({ ...s, file })); if (file) { const sizeError = validateFileSize(file, 10); const typeError = validateFileType(file, ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png']); if (sizeError || typeError) setErrors(prev => ({...prev, file: sizeError || typeError})); else if (errors.file) setErrors(prev => ({...prev, file: ''})); } }} accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" />
               </Button>
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                Supported formats: PDF, DOC, DOCX, JPG, PNG (Max 10MB)
-              </Typography>
+              {errors.file ? <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>{errors.file}</Typography> : <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>Supported formats: PDF, DOC, DOCX, JPG, PNG (Max 10MB)</Typography>}
             </Box>
           </Box>
         </DialogContent>

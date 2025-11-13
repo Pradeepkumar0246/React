@@ -91,23 +91,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     dispatch({ type: 'LOGIN_START' });
     try {
       const response = await authService.login(credentials);
+      console.log('Login response:', response);
       
+      const result = response.result;
       const user: User = {
-        employeeId: response.employeeId,
-        name: response.name,
-        role: response.role,
+        employeeId: result.employeeId,
+        name: result.name,
+        role: result.role,
         email: credentials.officeEmail,
-        profilePicture: response.profilepicture || '',
+        profilePicture: result.profilepicture || '',
       };
+      console.log('User object:', user);
 
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('empid', response.employeeId);
-      localStorage.setItem('name', response.name);
-      localStorage.setItem('role', response.role);
+      localStorage.setItem('token', result.token);
+      localStorage.setItem('empid', result.employeeId);
+      localStorage.setItem('name', result.name);
+      localStorage.setItem('role', result.role);
       localStorage.setItem('email', credentials.officeEmail);
-      localStorage.setItem('profilePicture', response.profilepicture || '');
+      localStorage.setItem('profilePicture', result.profilepicture || '');
+      console.log('Stored in localStorage - role:', result.role);
 
-      dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token: response.token } });
+      dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token: result.token } });
     } catch (error) {
       dispatch({ type: 'LOGIN_ERROR' });
       throw error;

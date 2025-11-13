@@ -4,6 +4,7 @@ import { Add, Delete, Edit, Work } from '@mui/icons-material';
 import { useAuth } from '../auth/AuthContext';
 import { roleService } from '../services/roleService';
 import { departmentService } from '../services/departmentService';
+import { validateRequired, validateStringLength } from '../utils/validation';
 import type { Role, Department } from '../types/employee';
 
 type FormState = { roleName: string; description: string; departmentId: string };
@@ -17,6 +18,7 @@ const Roles: React.FC = () => {
   const [openForm, setOpenForm] = useState(false);
   const [editRole, setEditRole] = useState<Role | null>(null);
   const [form, setForm] = useState<FormState>({ roleName: '', description: '', departmentId: '' });
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
 
   useEffect(() => { loadData(); }, []);
 
@@ -100,7 +102,7 @@ const Roles: React.FC = () => {
         <DialogTitle>{editRole ? 'Edit Role' : 'Add Role'}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField label="Role Name" value={form.roleName} onChange={(e) => setForm(s => ({ ...s, roleName: e.target.value }))} />
+            <TextField label="Role Name" value={form.roleName} onChange={(e) => { setForm(s => ({ ...s, roleName: e.target.value })); if (errors.roleName) setErrors(prev => ({...prev, roleName: ''})); }} onBlur={() => { const error = validateRequired(form.roleName, 'Role Name') || validateStringLength(form.roleName, 2, 100, 'Role Name'); if (error) setErrors(prev => ({...prev, roleName: error})); }} error={!!errors.roleName} helperText={errors.roleName} required />
             <FormControl>
               <InputLabel>Department</InputLabel>
               <Select value={form.departmentId} label="Department" onChange={(e) => setForm(s => ({ ...s, departmentId: e.target.value }))}>

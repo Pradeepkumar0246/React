@@ -68,7 +68,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 }
 
                 var createdDepartment = await _departmentService.CreateDepartmentAsync(departmentCreateDto);
-                return CreatedAtAction(nameof(GetDepartmentById), new { id = createdDepartment.DepartmentId }, createdDepartment);
+                return CreatedAtAction(nameof(GetDepartmentById), new { id = createdDepartment.DepartmentId }, new { message = "Department created successfully", result = createdDepartment });
             }
             catch (InvalidOperationException ex)
             {
@@ -102,7 +102,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 }
 
                 var updatedDepartment = await _departmentService.UpdateDepartmentAsync(departmentUpdateDto);
-                return Ok(updatedDepartment);
+                return Ok(new { message = "Department updated successfully", result = updatedDepartment });
             }
             catch (KeyNotFoundException ex)
             {
@@ -132,7 +132,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 var result = await _departmentService.DeleteDepartmentAsync(id);
                 if (result)
                 {
-                    return NoContent();
+                    return Ok(new { message = "Department deleted successfully" });
                 }
 
                 return NotFound(new { message = "Department not found." });

@@ -170,7 +170,7 @@ namespace HRPayrollSystem_Payslip.Controllers
 
                 var createdEmployee = await _employeeService.CreateEmployeeAsync(employeeCreateDto);
                 _logger.LogInformation("Employee {EmployeeId} created successfully", createdEmployee.EmployeeId);
-                return CreatedAtAction(nameof(GetEmployeeById), new { id = createdEmployee.EmployeeId }, createdEmployee);
+                return CreatedAtAction(nameof(GetEmployeeById), new { id = createdEmployee.EmployeeId }, new { message = "Employee created successfully", result = createdEmployee });
             }
             catch (KeyNotFoundException ex)
             {
@@ -213,7 +213,7 @@ namespace HRPayrollSystem_Payslip.Controllers
 
                 var updatedEmployee = await _employeeService.UpdateEmployeeAsync(employeeUpdateDto);
                 _logger.LogInformation("Employee {EmployeeId} updated successfully", id);
-                return Ok(updatedEmployee);
+                return Ok(new { message = "Employee updated successfully", result = updatedEmployee });
             }
             catch (KeyNotFoundException ex)
             {
@@ -248,7 +248,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 if (result)
                 {
                     _logger.LogInformation("Employee {EmployeeId} deleted successfully", id);
-                    return NoContent();
+                    return Ok(new { message = "Employee deleted successfully" });
                 }
 
                 _logger.LogWarning("Employee {EmployeeId} not found for deletion", id);

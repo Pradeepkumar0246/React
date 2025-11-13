@@ -112,7 +112,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 }
 
                 var createdLeaveRequest = await _leaveRequestService.CreateLeaveRequestAsync(leaveRequestCreateDto);
-                return CreatedAtAction(nameof(GetLeaveRequestById), new { id = createdLeaveRequest.LeaveRequestId }, createdLeaveRequest);
+                return CreatedAtAction(nameof(GetLeaveRequestById), new { id = createdLeaveRequest.LeaveRequestId }, new { message = "Leave request submitted successfully", result = createdLeaveRequest });
             }
             catch (KeyNotFoundException ex)
             {
@@ -154,7 +154,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 }
 
                 var updatedLeaveRequest = await _leaveRequestService.UpdateLeaveRequestAsync(leaveRequestUpdateDto);
-                return Ok(updatedLeaveRequest);
+                return Ok(new { message = "Leave request updated successfully", result = updatedLeaveRequest });
             }
             catch (KeyNotFoundException ex)
             {
@@ -193,7 +193,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 }
 
                 var updatedLeaveRequest = await _leaveRequestService.UpdateLeaveRequestStatusAsync(id, statusUpdateDto.Status, statusUpdateDto.ApprovedBy);
-                return Ok(updatedLeaveRequest);
+                return Ok(new { message = "Leave request updated successfully", result = updatedLeaveRequest });
             }
             catch (KeyNotFoundException ex)
             {

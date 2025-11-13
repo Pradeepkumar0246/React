@@ -3,6 +3,7 @@ import { Avatar, Box, Button, Container, Dialog, DialogActions, DialogContent, D
 import { Add, Delete, Edit, Business } from '@mui/icons-material';
 import { useAuth } from '../auth/AuthContext';
 import { departmentService } from '../services/departmentService';
+import { validateRequired, validateStringLength } from '../utils/validation';
 import type { Department } from '../types/employee';
 
 type FormState = { departmentName: string; description: string };
@@ -15,6 +16,7 @@ const Departments: React.FC = () => {
   const [openForm, setOpenForm] = useState(false);
   const [editDepartment, setEditDepartment] = useState<Department | null>(null);
   const [form, setForm] = useState<FormState>({ departmentName: '', description: '' });
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
 
   useEffect(() => { loadData(); }, []);
 
@@ -96,7 +98,7 @@ const Departments: React.FC = () => {
         <DialogTitle>{editDepartment ? 'Edit Department' : 'Add Department'}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField label="Department Name" value={form.departmentName} onChange={(e) => setForm(s => ({ ...s, departmentName: e.target.value }))} />
+            <TextField label="Department Name" value={form.departmentName} onChange={(e) => { setForm(s => ({ ...s, departmentName: e.target.value })); if (errors.departmentName) setErrors(prev => ({...prev, departmentName: ''})); }} onBlur={() => { const error = validateRequired(form.departmentName, 'Department Name') || validateStringLength(form.departmentName, 2, 100, 'Department Name'); if (error) setErrors(prev => ({...prev, departmentName: error})); }} error={!!errors.departmentName} helperText={errors.departmentName} required />
             <TextField label="Description" multiline rows={3} value={form.description} onChange={(e) => setForm(s => ({ ...s, description: e.target.value }))} />
           </Box>
         </DialogContent>

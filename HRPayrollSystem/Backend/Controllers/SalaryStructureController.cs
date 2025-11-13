@@ -97,7 +97,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 }
 
                 var createdSalaryStructure = await _salaryStructureService.CreateSalaryStructureAsync(salaryStructureCreateDto);
-                return CreatedAtAction(nameof(GetSalaryStructureById), new { id = createdSalaryStructure.SalaryStructureId }, createdSalaryStructure);
+                return CreatedAtAction(nameof(GetSalaryStructureById), new { id = createdSalaryStructure.SalaryStructureId }, new { message = "Salary structure created successfully", result = createdSalaryStructure });
             }
             catch (KeyNotFoundException ex)
             {
@@ -135,7 +135,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 }
 
                 var updatedSalaryStructure = await _salaryStructureService.UpdateSalaryStructureAsync(salaryStructureUpdateDto);
-                return Ok(updatedSalaryStructure);
+                return Ok(new { message = "Salary structure updated successfully", result = updatedSalaryStructure });
             }
             catch (KeyNotFoundException ex)
             {

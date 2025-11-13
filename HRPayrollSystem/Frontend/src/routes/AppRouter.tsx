@@ -23,8 +23,10 @@ import EmployeeLeaveRequests from '../pages/employee/EmployeeLeaveRequests';
 import EmployeeDocuments from '../pages/employee/EmployeeDocuments';
 
 const AppRouter: React.FC = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
   const isHR = user?.role === 'Admin' || user?.role === 'HR Manager';
+  
+  console.log('AppRouter - User:', user?.role, 'isHR:', isHR, 'isLoading:', isLoading);
 
   return (
     <Routes>
@@ -188,7 +190,7 @@ const AppRouter: React.FC = () => {
       <Route path="/404" element={<UnauthorizedPage />} />
 
       {/* Default Routes */}
-      <Route path="/" element={<Navigate to={isHR ? "/dashboard" : "/employee/dashboard"} replace />} />
+      <Route path="/" element={isAuthenticated ? <Navigate to={isHR ? "/dashboard" : "/employee/dashboard"} replace /> : <Navigate to="/login" replace />} />
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
   );

@@ -4,11 +4,14 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  token: string;
-  employeeId: string;
-  name: string;
-  role: string;
-  profilepicture?: string;
+  message: string;
+  result: {
+    token: string;
+    employeeId: string;
+    name: string;
+    role: string;
+    profilepicture?: string;
+  };
 }
 
 export interface User {

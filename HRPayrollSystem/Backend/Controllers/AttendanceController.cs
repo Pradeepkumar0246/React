@@ -111,7 +111,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 }
 
                 var createdAttendance = await _attendanceService.CreateAttendanceAsync(attendanceCreateDto);
-                return CreatedAtAction(nameof(GetAttendanceById), new { id = createdAttendance.AttendanceId }, createdAttendance);
+                return CreatedAtAction(nameof(GetAttendanceById), new { id = createdAttendance.AttendanceId }, new { message = "Attendance created successfully", result = createdAttendance });
             }
             catch (KeyNotFoundException ex)
             {
@@ -153,7 +153,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 }
 
                 var updatedAttendance = await _attendanceService.UpdateAttendanceAsync(attendanceUpdateDto);
-                return Ok(updatedAttendance);
+                return Ok(new { message = "Attendance updated successfully", result = updatedAttendance });
             }
             catch (KeyNotFoundException ex)
             {
@@ -187,7 +187,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 }
 
                 var attendance = await _attendanceService.CheckInAsync(employeeId);
-                return Ok(attendance);
+                return Ok(new { message = "Check-in successful", result = attendance });
             }
             catch (KeyNotFoundException ex)
             {
@@ -215,7 +215,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 }
 
                 var attendance = await _attendanceService.CheckOutAsync(employeeId);
-                return Ok(attendance);
+                return Ok(new { message = "Check-out successful", result = attendance });
             }
             catch (KeyNotFoundException ex)
             {

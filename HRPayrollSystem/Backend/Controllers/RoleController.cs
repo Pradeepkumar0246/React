@@ -68,7 +68,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 }
 
                 var createdRole = await _roleService.CreateRoleAsync(roleCreateDto);
-                return CreatedAtAction(nameof(GetRoleById), new { id = createdRole.RoleId }, createdRole);
+                return CreatedAtAction(nameof(GetRoleById), new { id = createdRole.RoleId }, new { message = "Role created successfully", result = createdRole });
             }
             catch (InvalidOperationException ex)
             {
@@ -106,7 +106,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 }
 
                 var updatedRole = await _roleService.UpdateRoleAsync(roleUpdateDto);
-                return Ok(updatedRole);
+                return Ok(new { message = "Role updated successfully", result = updatedRole });
             }
             catch (KeyNotFoundException ex)
             {
@@ -136,7 +136,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 var result = await _roleService.DeleteRoleAsync(id);
                 if (result)
                 {
-                    return NoContent();
+                    return Ok(new { message = "Role deleted successfully" });
                 }
 
                 return NotFound(new { message = "Role not found." });

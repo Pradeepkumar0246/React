@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext';
 import { leaveRequestService } from '../services/leaveRequestService';
 import { employeeService } from '../services/employeeService';
 import { leaveBalanceService } from '../services/leaveBalanceService';
+import { validateRequired, validateDateRange } from '../utils/validation';
 import type { LeaveRequest, LeaveRequestFilters } from '../types/leaveRequest';
 import type { Employee } from '../types/employee';
 type LeaveBalanceWithStats = {
@@ -29,6 +30,7 @@ const LeaveRequests: React.FC = () => {
   const [openForm, setOpenForm] = useState(false);
   const [editLeaveRequest, setEditLeaveRequest] = useState<LeaveRequest | null>(null);
   const [form, setForm] = useState<FormState>({ employeeId: '', leaveType: 'Casual', fromDate: '', toDate: '', isHalfDay: false, halfDayPeriod: '', reason: '' });
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [openBalance, setOpenBalance] = useState(false);
   const [balanceData, setBalanceData] = useState<LeaveBalanceWithStats[]>([]);
   const [balanceEmployee, setBalanceEmployee] = useState<string>('');
@@ -186,14 +188,14 @@ const LeaveRequests: React.FC = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <FormControl><InputLabel>Employee</InputLabel><Select value={form.employeeId} label="Employee" onChange={(e) => setForm(s => ({ ...s, employeeId: e.target.value }))} disabled={!isAdmin}>{employees.map((e) => <MenuItem key={e.employeeId} value={e.employeeId}>{e.fullName}</MenuItem>)}</Select></FormControl>
             <FormControl><InputLabel>Leave Type</InputLabel><Select value={form.leaveType} label="Leave Type" onChange={(e) => setForm(s => ({ ...s, leaveType: e.target.value }))}><MenuItem value="Casual">Casual</MenuItem><MenuItem value="Sick">Sick</MenuItem><MenuItem value="Earned">Earned</MenuItem><MenuItem value="Maternity">Maternity</MenuItem><MenuItem value="Paternity">Paternity</MenuItem><MenuItem value="Emergency">Emergency</MenuItem><MenuItem value="LOP">LOP</MenuItem></Select></FormControl>
-            <TextField type="date" label="From Date" value={form.fromDate} onChange={(e) => setForm(s => ({ ...s, fromDate: e.target.value }))} InputLabelProps={{ shrink: true }} />
-            <TextField type="date" label="To Date" value={form.toDate} onChange={(e) => setForm(s => ({ ...s, toDate: e.target.value }))} InputLabelProps={{ shrink: true }} />
+            <TextField type="date" label="From Date" value={form.fromDate} onChange={(e) => { setForm(s => ({ ...s, fromDate: e.target.value })); if (errors.fromDate) setErrors(prev => ({...prev, fromDate: ''})); }} onBlur={() => { const error = validateRequired(form.fromDate, 'From Date'); if (error) setErrors(prev => ({...prev, fromDate: error})); }} error={!!errors.fromDate} helperText={errors.fromDate} InputLabelProps={{ shrink: true }} required />
+            <TextField type="date" label="To Date" value={form.toDate} onChange={(e) => { setForm(s => ({ ...s, toDate: e.target.value })); if (errors.toDate) setErrors(prev => ({...prev, toDate: ''})); }} onBlur={() => { const error = validateRequired(form.toDate, 'To Date') || (form.fromDate && validateDateRange(form.fromDate, form.toDate)); if (error) setErrors(prev => ({...prev, toDate: error})); }} error={!!errors.toDate} helperText={errors.toDate} InputLabelProps={{ shrink: true }} required />
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Checkbox checked={form.isHalfDay} onChange={(e) => setForm(s => ({ ...s, isHalfDay: e.target.checked }))} />
               <Typography>Half Day</Typography>
               {form.isHalfDay && <FormControl sx={{ minWidth: 120 }}><InputLabel>Period</InputLabel><Select value={form.halfDayPeriod} label="Period" onChange={(e) => setForm(s => ({ ...s, halfDayPeriod: e.target.value }))}><MenuItem value="Morning">Morning</MenuItem><MenuItem value="Afternoon">Afternoon</MenuItem></Select></FormControl>}
             </Box>
-            <TextField label="Reason" multiline rows={3} value={form.reason} onChange={(e) => setForm(s => ({ ...s, reason: e.target.value }))} />
+            <TextField label="Reason" multiline rows={3} value={form.reason} onChange={(e) => { setForm(s => ({ ...s, reason: e.target.value })); if (errors.reason) setErrors(prev => ({...prev, reason: ''})); }} onBlur={() => { const error = validateRequired(form.reason, 'Reason'); if (error) setErrors(prev => ({...prev, reason: error})); }} error={!!errors.reason} helperText={errors.reason} required />
           </Box>
         </DialogContent>
         <DialogActions>
