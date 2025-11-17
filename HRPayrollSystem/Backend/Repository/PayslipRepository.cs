@@ -96,5 +96,29 @@ namespace HRPayrollSystem_Payslip.Repository
                 .Include(e => e.Role)
                 .FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
         }
+
+        public async Task<SalaryStructure?> GetSalaryStructureByEmployeeIdAsync(string employeeId)
+        {
+            return await _context.SalaryStructures
+                .FirstOrDefaultAsync(s => s.EmployeeId == employeeId);
+        }
+
+        public async Task<IEnumerable<Attendance>> GetAttendanceRecordsAsync(string employeeId, DateTime startDate, DateTime endDate)
+        {
+            return await _context.Attendances
+                .Where(a => a.EmployeeId == employeeId && 
+                           a.Date >= startDate.Date && 
+                           a.Date <= endDate.Date)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<LeaveRequest>> GetLeaveRecordsAsync(string employeeId, DateTime startDate, DateTime endDate)
+        {
+            return await _context.LeaveRequests
+                .Where(l => l.EmployeeId == employeeId && 
+                           l.FromDate >= startDate.Date && 
+                           l.ToDate <= endDate.Date)
+                .ToListAsync();
+        }
     }
 }

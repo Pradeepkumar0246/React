@@ -357,6 +357,16 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "HRPayrollSystem_Payslip.Controllers.AuthController",
+    "Method": "GetCurrentUser",
+    "RelativePath": "api/Auth/me",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "HRPayrollSystem_Payslip.Controllers.DepartmentController",
     "Method": "GetAllDepartments",
     "RelativePath": "api/Department",

@@ -24,12 +24,16 @@ export const payrollService = {
   },
 
   generate: async (data: PayrollGenerate): Promise<Payroll> => {
+    // Convert payment status string to enum number
+    const statusMap = { 'Pending': 0, 'Processed': 1, 'Paid': 2 };
+    const paymentStatusNumber = data.paymentStatus ? statusMap[data.paymentStatus] : 0;
+    
     const payload = {
       employeeId: data.employeeId,
       month: data.month + '-01', // Convert YYYY-MM to YYYY-MM-01
       bonusAmount: data.bonusAmount || 0,
       additionalDeductions: data.additionalDeductions || 0,
-      paymentStatus: 0 // Pending
+      paymentStatus: paymentStatusNumber
     };
     const response = await payrollApi.generate(payload);
     return response.data;

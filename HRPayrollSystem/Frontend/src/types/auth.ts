@@ -22,6 +22,14 @@ export interface User {
   profilePicture?: string;
 }
 
+export interface UserDetails {
+  employeeId: string;
+  name: string;
+  role: string;
+  email: string;
+  profilePicture?: string;
+}
+
 export interface AuthState {
   user: User | null;
   token: string | null;

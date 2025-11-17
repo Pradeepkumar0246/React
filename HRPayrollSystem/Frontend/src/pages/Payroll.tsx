@@ -73,7 +73,13 @@ const PayrollPage: React.FC = () => {
 
   const handleGenerate = async () => {
     try {
-      await payrollService.generate({ ...generateForm, paymentStatus: 'Pending' });
+      await payrollService.generate({ 
+        employeeId: generateForm.employeeId,
+        month: generateForm.month,
+        bonusAmount: generateForm.bonusAmount,
+        additionalDeductions: generateForm.additionalDeductions,
+        paymentStatus: generateForm.paymentStatus as 'Pending' | 'Processed' | 'Paid'
+      });
       await loadData(); setOpenGenerate(false);
     } catch (err) {
       const error = err as { response?: { data?: { message?: string }; status?: number }; message?: string };

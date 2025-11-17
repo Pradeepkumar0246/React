@@ -15,5 +15,8 @@ namespace HRPayrollSystem_Payslip.Interfaces
         Task<bool> PayslipExistsForPayrollAsync(int payrollId, int? excludeId = null);
         Task<Payroll?> GetPayrollByIdAsync(int payrollId);
         Task<Employee?> GetEmployeeByIdAsync(string employeeId);
+        Task<SalaryStructure?> GetSalaryStructureByEmployeeIdAsync(string employeeId);
+        Task<IEnumerable<Attendance>> GetAttendanceRecordsAsync(string employeeId, DateTime startDate, DateTime endDate);
+        Task<IEnumerable<LeaveRequest>> GetLeaveRecordsAsync(string employeeId, DateTime startDate, DateTime endDate);
     }
 }

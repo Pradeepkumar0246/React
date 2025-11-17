@@ -136,5 +136,11 @@ namespace HRPayrollSystem_Payslip.Repository
                            l.ToDate <= endDate.Date)
                 .ToListAsync();
         }
+
+        public async Task<Employee?> GetEmployeeByIdAsync(string employeeId)
+        {
+            return await _context.Employees
+                .FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
+        }
     }
 }

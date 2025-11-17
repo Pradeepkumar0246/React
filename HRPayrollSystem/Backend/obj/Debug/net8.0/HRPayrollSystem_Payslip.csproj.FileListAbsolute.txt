@@ -369,10 +369,10 @@ J:\HRPayrollSystem\HRPayrollSystem_Payslip\HRPayrollSystem_Payslip\obj\Debug\net
 J:\HRPayrollSystem\HRPayrollSystem_Payslip\HRPayrollSystem_Payslip\obj\Debug\net8.0\staticwebassets.build.json.cache
 J:\HRPayrollSystem\HRPayrollSystem_Payslip\HRPayrollSystem_Payslip\obj\Debug\net8.0\staticwebassets.development.json
 J:\HRPayrollSystem\HRPayrollSystem_Payslip\HRPayrollSystem_Payslip\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-J:\HRPayrollSystem\HRPayrollSystem_Payslip\HRPayrollSystem_Payslip\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 J:\HRPayrollSystem\HRPayrollSystem_Payslip\HRPayrollSystem_Payslip\obj\Debug\net8.0\HRPayrol.276A0D5B.Up2Date
 J:\HRPayrollSystem\HRPayrollSystem_Payslip\HRPayrollSystem_Payslip\obj\Debug\net8.0\HRPayrollSystem_Payslip.dll
 J:\HRPayrollSystem\HRPayrollSystem_Payslip\HRPayrollSystem_Payslip\obj\Debug\net8.0\refint\HRPayrollSystem_Payslip.dll
 J:\HRPayrollSystem\HRPayrollSystem_Payslip\HRPayrollSystem_Payslip\obj\Debug\net8.0\HRPayrollSystem_Payslip.pdb
 J:\HRPayrollSystem\HRPayrollSystem_Payslip\HRPayrollSystem_Payslip\obj\Debug\net8.0\HRPayrollSystem_Payslip.genruntimeconfig.cache
 J:\HRPayrollSystem\HRPayrollSystem_Payslip\HRPayrollSystem_Payslip\obj\Debug\net8.0\ref\HRPayrollSystem_Payslip.dll
+J:\HRPayrollSystem\HRPayrollSystem_Payslip\HRPayrollSystem_Payslip\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

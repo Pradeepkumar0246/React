@@ -42,6 +42,25 @@ namespace HRPayrollSystem_Payslip.Services
             };
         }
 
+        public async Task<UserDetailsDto?> GetCurrentUserAsync(string employeeId)
+        {
+            var employee = await _context.Employees
+                .Include(e => e.Role)
+                .FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
+
+            if (employee == null)
+                return null;
+
+            return new UserDetailsDto
+            {
+                EmployeeId = employee.EmployeeId,
+                Name = $"{employee.FirstName} {employee.LastName}",
+                Role = employee.Role?.RoleName ?? "Unknown",
+                Email = employee.OfficeEmail,
+                ProfilePicture = employee.ProfilePicture
+            };
+        }
+
         private static bool VerifyPassword(string password, string hashedPassword)
         {
             using var sha256 = SHA256.Create();

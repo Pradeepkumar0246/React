@@ -1,24 +1,21 @@
 using HRPayrollSystem_Payslip.DTOs.PayslipDTO;
 using HRPayrollSystem_Payslip.Interfaces;
 using HRPayrollSystem_Payslip.Models;
+using HRPayrollSystem_Payslip.Enums;
 using iText.Kernel.Pdf;
 using iText.Layout;
 using iText.Layout.Element;
 using iText.Layout.Properties;
-using iText.Kernel.Colors;
-using iText.Layout.Borders;
 using iText.IO.Image;
-using iText.Kernel.Font;
-using iText.IO.Font.Constants;
 
 namespace HRPayrollSystem_Payslip.Services
 {
-    public class PayslipService : IPayslipService
+    public class PayslipServiceSimple : IPayslipService
     {
         private readonly IPayslipRepository _payslipRepository;
         private readonly IWebHostEnvironment _environment;
 
-        public PayslipService(IPayslipRepository payslipRepository, IWebHostEnvironment environment)
+        public PayslipServiceSimple(IPayslipRepository payslipRepository, IWebHostEnvironment environment)
         {
             _payslipRepository = payslipRepository;
             _environment = environment;
@@ -58,8 +55,6 @@ namespace HRPayrollSystem_Payslip.Services
             return payslip == null ? null : MapToResponseDto(payslip);
         }
 
-
-
         public async Task<PayslipResponseDto> UpdatePayslipAsync(PayslipUpdateDto payslipUpdateDto)
         {
             if (!await _payslipRepository.ExistsAsync(payslipUpdateDto.PayslipId))
@@ -67,29 +62,8 @@ namespace HRPayrollSystem_Payslip.Services
                 throw new KeyNotFoundException("Payslip not found.");
             }
 
-            if (!await _payslipRepository.EmployeeExistsAsync(payslipUpdateDto.EmployeeId))
-            {
-                throw new KeyNotFoundException("Employee not found.");
-            }
-
-            if (!await _payslipRepository.PayrollExistsAsync(payslipUpdateDto.PayrollId))
-            {
-                throw new KeyNotFoundException("Payroll not found.");
-            }
-
-            if (await _payslipRepository.PayslipExistsForPayrollAsync(payslipUpdateDto.PayrollId, payslipUpdateDto.PayslipId))
-            {
-                throw new InvalidOperationException("Payslip already exists for this payroll.");
-            }
-
             var existingPayslip = await _payslipRepository.GetByIdAsync(payslipUpdateDto.PayslipId);
             var filePath = existingPayslip!.FilePath;
-
-            if (payslipUpdateDto.PayslipFile != null)
-            {
-                DeleteFile(filePath);
-                filePath = await SaveFileAsync(payslipUpdateDto.PayslipFile, payslipUpdateDto.EmployeeId);
-            }
 
             var payslip = new Payslip
             {
@@ -105,8 +79,6 @@ namespace HRPayrollSystem_Payslip.Services
             return MapToResponseDto(result!);
         }
 
-
-
         public async Task<byte[]> DownloadPayslipAsync(int id)
         {
             var payslip = await _payslipRepository.GetByIdAsync(id);
@@ -115,7 +87,8 @@ namespace HRPayrollSystem_Payslip.Services
                 throw new KeyNotFoundException("Payslip not found.");
             }
 
-            var fullPath = Path.Combine(_environment.WebRootPath, payslip.FilePath.TrimStart('/'));
+            var webRootPath = _environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            var fullPath = Path.Combine(webRootPath, payslip.FilePath.TrimStart('/'));
             if (!File.Exists(fullPath))
             {
                 throw new FileNotFoundException("Payslip file not found.");
@@ -124,44 +97,20 @@ namespace HRPayrollSystem_Payslip.Services
             return await File.ReadAllBytesAsync(fullPath);
         }
 
-        private async Task<string> SaveFileAsync(IFormFile file, string employeeId)
-        {
-            var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "payslips", employeeId);
-            Directory.CreateDirectory(uploadsFolder);
-
-            var fileName = $"{Guid.NewGuid()}_{file.FileName}";
-            var filePath = Path.Combine(uploadsFolder, fileName);
-
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
-
-            return $"/uploads/payslips/{employeeId}/{fileName}";
-        }
-
-        private void DeleteFile(string filePath)
-        {
-            try
-            {
-                var fullPath = Path.Combine(_environment.WebRootPath, filePath.TrimStart('/'));
-                if (File.Exists(fullPath))
-                {
-                    File.Delete(fullPath);
-                }
-            }
-            catch
-            {
-                // Log error but don't throw
-            }
-        }
-
         public async Task<string> GeneratePayslipAsync(string employeeId, int payrollId)
         {
             try
             {
-                var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "payslips", employeeId);
+                var webRootPath = _environment.WebRootPath;
+                if (string.IsNullOrEmpty(webRootPath))
+                {
+                    webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                    Directory.CreateDirectory(webRootPath);
+                }
+                
+                var uploadsFolder = Path.Combine(webRootPath, "uploads", "payslips", employeeId);
                 Directory.CreateDirectory(uploadsFolder);
 
-                // Get actual data
                 var payrollData = await GetPayrollDataAsync(payrollId);
                 var employeeData = await GetEmployeeDataAsync(employeeId);
                 
@@ -173,16 +122,19 @@ namespace HRPayrollSystem_Payslip.Services
                 using (var pdf = new PdfDocument(writer))
                 using (var document = new Document(pdf))
                 {
-                    var logoPath = Path.Combine(_environment.WebRootPath, "company", "logo.png");
-                    if (File.Exists(logoPath))
+                    // Logo
+                    try
                     {
-                        var logoData = ImageDataFactory.Create(logoPath);
-                        var logo = new Image(logoData)
-                            .SetWidth(80) // adjust as needed
-                            .SetFixedPosition(36, pdf.GetDefaultPageSize().GetTop() - 80);
-                        // 36 = left margin, 80 = distance from top (tweak to your liking)
-                        document.Add(logo);
+                        var logoPath = Path.Combine(webRootPath, "company", "Logo.png");
+                        if (File.Exists(logoPath))
+                        {
+                            var logoData = ImageDataFactory.Create(logoPath);
+                            var logo = new Image(logoData).SetWidth(60).SetHeight(60);
+                            document.Add(new Paragraph().Add(logo).SetTextAlignment(TextAlignment.CENTER));
+                        }
                     }
+                    catch { }
+                    
                     // Company Header
                     document.Add(new Paragraph("Phoenix HR Payroll Systems")
                         .SetFontSize(20).SetBold().SetTextAlignment(TextAlignment.CENTER));
@@ -190,12 +142,9 @@ namespace HRPayrollSystem_Payslip.Services
                         .SetFontSize(10).SetTextAlignment(TextAlignment.CENTER));
                     document.Add(new Paragraph("Phone: +91 98765 43210 | Email: hr@phoenixpayroll.com")
                         .SetFontSize(10).SetTextAlignment(TextAlignment.CENTER));
-                    document.Add(new Paragraph("GST: 27ABCDE1234F1Z5")
-                        .SetFontSize(10).SetTextAlignment(TextAlignment.CENTER));
                     
                     document.Add(new Paragraph("\n"));
                     
-                    // Payslip Title
                     document.Add(new Paragraph($"SALARY SLIP - {payrollMonth:MMMM yyyy}")
                         .SetFontSize(16).SetBold().SetTextAlignment(TextAlignment.CENTER));
                     
@@ -208,61 +157,44 @@ namespace HRPayrollSystem_Payslip.Services
                     document.Add(new Paragraph($"Department: {employeeData.DepartmentName}"));
                     document.Add(new Paragraph($"Designation: {employeeData.RoleName}"));
                     document.Add(new Paragraph($"Date of Joining: {employeeData.DateOfJoining:dd-MMM-yyyy}"));
-                    document.Add(new Paragraph($"Employment Type: {employeeData.EmploymentType}"));
                     
                     document.Add(new Paragraph("\n"));
                     
-                    // Pay Period
-                    document.Add(new Paragraph($"Pay Period: {payrollMonth:dd-MMM-yyyy} to {payrollMonth.AddMonths(1).AddDays(-1):dd-MMM-yyyy}"));
-                    document.Add(new Paragraph($"Payment Date: {DateTime.Now:dd-MMM-yyyy}"));
-                    
-                    document.Add(new Paragraph("\n"));
-                    
-                    // Attendance Summary
+                    // Attendance
+                    var attendanceData = await GetAttendanceDataAsync(employeeId, payrollMonth);
                     document.Add(new Paragraph("ATTENDANCE SUMMARY").SetFontSize(12).SetBold());
-                    document.Add(new Paragraph("Total Days: 31 | Working Days: 22 | Present Days: 20 | Leaves Taken: 2"));
+                    document.Add(new Paragraph($"Working Days: {attendanceData.WorkingDays} | Present: {attendanceData.PresentDays} | Leaves: {attendanceData.LeavesTaken} | Absent: {attendanceData.AbsentDays}"));
                     
                     document.Add(new Paragraph("\n"));
                     
                     // Salary Breakdown
+                    var salaryData = await GetSalaryDataAsync(employeeId);
                     document.Add(new Paragraph("SALARY BREAKDOWN").SetFontSize(12).SetBold());
                     
-                    var basicSalary = payrollData.GrossSalary * 0.6m;
-                    var hra = payrollData.GrossSalary * 0.25m;
-                    var allowances = payrollData.GrossSalary * 0.15m;
-                    var pf = basicSalary * 0.12m;
-                    var tax = payrollData.TotalDeductions - pf - 500;
-                    var otherDeductions = 500m;
-                    
                     document.Add(new Paragraph("EARNINGS:"));
-                    document.Add(new Paragraph($"  Basic Salary: ₹ {basicSalary:N2}"));
-                    document.Add(new Paragraph($"  House Rent Allowance: ₹ {hra:N2}"));
-                    document.Add(new Paragraph($"  Other Allowances: ₹ {allowances:N2}"));
+                    document.Add(new Paragraph($"  Basic Salary: ₹ {salaryData.BasicSalary:N2}"));
+                    document.Add(new Paragraph($"  House Rent Allowance: ₹ {salaryData.HRA:N2}"));
+                    document.Add(new Paragraph($"  Other Allowances: ₹ {salaryData.Allowances:N2}"));
                     if (payrollData.Bonus > 0)
                     {
                         document.Add(new Paragraph($"  Bonus: ₹ {payrollData.Bonus:N2}"));
                     }
-                    document.Add(new Paragraph($"  TOTAL EARNINGS: ₹ {payrollData.GrossSalary + payrollData.Bonus:N2}").SetBold());
+                    document.Add(new Paragraph($"  TOTAL EARNINGS: ₹ {payrollData.GrossSalary:N2}").SetBold());
                     
                     document.Add(new Paragraph("\nDEDUCTIONS:"));
-                    document.Add(new Paragraph($"  Provident Fund: ₹ {pf:N2}"));
-                    document.Add(new Paragraph($"  Income Tax: ₹ {tax:N2}"));
-                    document.Add(new Paragraph($"  Other Deductions: ₹ {otherDeductions:N2}"));
+                    document.Add(new Paragraph($"  Provident Fund: ₹ {salaryData.PF:N2}"));
+                    document.Add(new Paragraph($"  Income Tax: ₹ {salaryData.Tax:N2}"));
+                    document.Add(new Paragraph($"  Other Deductions: ₹ {salaryData.Deductions:N2}"));
                     document.Add(new Paragraph($"  TOTAL DEDUCTIONS: ₹ {payrollData.TotalDeductions:N2}").SetBold());
                     
                     document.Add(new Paragraph("\n"));
                     
-                    // Net Pay
                     document.Add(new Paragraph($"NET PAY: ₹ {payrollData.NetPay:N2}")
                         .SetFontSize(14).SetBold());
                     
-                    document.Add(new Paragraph($"Amount in Words: {ConvertToWords(payrollData.NetPay)} Rupees Only")
-                        .SetFontSize(10));
+                    document.Add(new Paragraph("\n"));
                     
-                    document.Add(new Paragraph("\n\n"));
-                    
-                    // Footer
-                    document.Add(new Paragraph("Note: This is a computer-generated payslip and does not require a signature.")
+                    document.Add(new Paragraph("Note: This is a computer-generated payslip.")
                         .SetFontSize(8).SetTextAlignment(TextAlignment.CENTER));
                     document.Add(new Paragraph($"Generated on: {DateTime.Now:dd-MMM-yyyy HH:mm}")
                         .SetFontSize(8).SetTextAlignment(TextAlignment.CENTER));
@@ -274,30 +206,6 @@ namespace HRPayrollSystem_Payslip.Services
             {
                 throw new Exception($"PDF generation failed: {ex.Message}", ex);
             }
-        }
-
-
-
-        private Cell CreateCell(string content, PdfFont font)
-        {
-            return new Cell().Add(new Paragraph(content).SetFont(font).SetFontSize(9))
-                           .SetPadding(5).SetBorder(new SolidBorder(1));
-        }
-
-        private Cell CreateHeaderCell(string content, PdfFont font)
-        {
-            return new Cell().Add(new Paragraph(content).SetFont(font).SetFontSize(9))
-                           .SetPadding(5).SetBorder(new SolidBorder(1))
-                           .SetBackgroundColor(ColorConstants.LIGHT_GRAY);
-        }
-
-        private string ConvertToWords(decimal amount)
-        {
-            // Simple implementation for demo
-            var intAmount = (int)amount;
-            if (intAmount < 1000) return "Less than One Thousand";
-            if (intAmount < 100000) return $"{intAmount / 1000} Thousand {intAmount % 1000}";
-            return $"{intAmount / 100000} Lakh {(intAmount % 100000) / 1000} Thousand";
         }
 
         private async Task<dynamic> GetPayrollDataAsync(int payrollId)
@@ -329,7 +237,6 @@ namespace HRPayrollSystem_Payslip.Services
 
         private async Task<dynamic> GetEmployeeDataAsync(string employeeId)
         {
-            // Get actual employee data from repository
             var employee = await _payslipRepository.GetEmployeeByIdAsync(employeeId);
             if (employee != null)
             {
@@ -345,7 +252,6 @@ namespace HRPayrollSystem_Payslip.Services
                 };
             }
             
-            // Fallback data if employee not found
             return new
             {
                 EmployeeId = employeeId,
@@ -356,6 +262,85 @@ namespace HRPayrollSystem_Payslip.Services
                 DateOfJoining = DateTime.Now,
                 EmploymentType = "FullTime"
             };
+        }
+
+        private async Task<dynamic> GetSalaryDataAsync(string employeeId)
+        {
+            try
+            {
+                var salaryStructure = await _payslipRepository.GetSalaryStructureByEmployeeIdAsync(employeeId);
+                if (salaryStructure != null)
+                {
+                    return new
+                    {
+                        BasicSalary = salaryStructure.BasicSalary,
+                        HRA = salaryStructure.HRA,
+                        Allowances = salaryStructure.Allowances,
+                        PF = salaryStructure.PF,
+                        Tax = salaryStructure.Tax,
+                        Deductions = salaryStructure.Deductions
+                    };
+                }
+            }
+            catch { }
+            
+            return new
+            {
+                BasicSalary = 50000m,
+                HRA = 15000m,
+                Allowances = 5000m,
+                PF = 6000m,
+                Tax = 2000m,
+                Deductions = 500m
+            };
+        }
+
+        private async Task<dynamic> GetAttendanceDataAsync(string employeeId, DateTime payrollMonth)
+        {
+            var monthStart = payrollMonth;
+            var monthEnd = payrollMonth.AddMonths(1).AddDays(-1);
+            var totalWorkingDays = CalculateWorkingDays(monthStart, monthEnd);
+            
+            try
+            {
+                var attendanceRecords = await _payslipRepository.GetAttendanceRecordsAsync(employeeId, monthStart, monthEnd) ?? new List<Attendance>();
+                var leaveRecords = await _payslipRepository.GetLeaveRecordsAsync(employeeId, monthStart, monthEnd) ?? new List<LeaveRequest>();
+                
+                var presentDays = attendanceRecords.Count(a => a.Status == AttendanceStatus.Present);
+                var leavesTaken = (int)leaveRecords.Where(l => l.Status == LeaveStatus.Approved).Sum(l => l.NumberOfDays);
+                var absentDays = Math.Max(0, totalWorkingDays - presentDays - leavesTaken);
+                
+                return new
+                {
+                    WorkingDays = totalWorkingDays,
+                    PresentDays = presentDays,
+                    LeavesTaken = leavesTaken,
+                    AbsentDays = absentDays
+                };
+            }
+            catch
+            {
+                return new
+                {
+                    WorkingDays = totalWorkingDays,
+                    PresentDays = totalWorkingDays,
+                    LeavesTaken = 0,
+                    AbsentDays = 0
+                };
+            }
+        }
+
+        private static int CalculateWorkingDays(DateTime startDate, DateTime endDate)
+        {
+            var workingDays = 0;
+            for (var date = startDate.Date; date <= endDate.Date; date = date.AddDays(1))
+            {
+                if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
+                {
+                    workingDays++;
+                }
+            }
+            return workingDays;
         }
 
         private static PayslipResponseDto MapToResponseDto(Payslip payslip)

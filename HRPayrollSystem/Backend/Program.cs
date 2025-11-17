@@ -105,7 +105,7 @@ builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
 builder.Services.AddScoped<ILeaveBalanceService, LeaveBalanceService>();
 builder.Services.AddScoped<ISalaryStructureService, SalaryStructureService>();
 builder.Services.AddScoped<IPayrollService, PayrollService>();
-builder.Services.AddScoped<IPayslipService, PayslipService>();
+builder.Services.AddScoped<IPayslipService, PayslipServiceSimple>();
 builder.Services.AddScoped<IEmployeeDocumentService, EmployeeDocumentService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IAuthService, AuthService>();

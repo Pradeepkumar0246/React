@@ -100,6 +100,7 @@ const DocumentsPage: React.FC = () => {
     switch (category) {
       case 'IDProof': return 'primary';
       case 'Experience': return 'success';
+      case 'Skill': return 'secondary';
       case 'Education': return 'info';
       case 'Contract': return 'warning';
       case 'Medical': return 'error';

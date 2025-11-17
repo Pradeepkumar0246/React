@@ -55,61 +55,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const decoded = jwtDecode(token) as { exp: number };
-        if (decoded.exp * 1000 > Date.now()) {
-          const user: User = {
-            employeeId: localStorage.getItem('empid') || '',
-            name: localStorage.getItem('name') || '',
-            role: localStorage.getItem('role') || '',
-            email: localStorage.getItem('email') || '',
-            profilePicture: localStorage.getItem('profilePicture') || '',
-          };
-          dispatch({ type: 'RESTORE_AUTH', payload: { user, token } });
-        } else {
+    const initializeAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const decoded = jwtDecode(token) as { exp: number };
+          if (decoded.exp * 1000 > Date.now()) {
+            // Token is valid, fetch user details from API
+            const userDetails = await authService.getCurrentUser();
+            const user: User = {
+              employeeId: userDetails.employeeId,
+              name: userDetails.name,
+              role: userDetails.role,
+              email: userDetails.email,
+              profilePicture: userDetails.profilePicture,
+            };
+            dispatch({ type: 'RESTORE_AUTH', payload: { user, token } });
+          } else {
+            // Token expired
+            localStorage.removeItem('token');
+            dispatch({ type: 'LOGOUT' });
+          }
+        } catch (error) {
+          // Token invalid or API call failed - logout
+          console.error('Auth initialization failed:', error);
           localStorage.removeItem('token');
-          localStorage.removeItem('empid');
-          localStorage.removeItem('name');
-          localStorage.removeItem('role');
-          localStorage.removeItem('email');
-          localStorage.removeItem('profilePicture');
+          dispatch({ type: 'LOGOUT' });
         }
-      } catch {
-        localStorage.removeItem('token');
-        localStorage.removeItem('empid');
-        localStorage.removeItem('name');
-        localStorage.removeItem('role');
-        localStorage.removeItem('email');
-        localStorage.removeItem('profilePicture');
+      } else {
+        dispatch({ type: 'LOGOUT' });
       }
-    }
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (credentials: LoginRequest) => {
     dispatch({ type: 'LOGIN_START' });
     try {
       const response = await authService.login(credentials);
-      console.log('Login response:', response);
-      
       const result = response.result;
-      const user: User = {
-        employeeId: result.employeeId,
-        name: result.name,
-        role: result.role,
-        email: credentials.officeEmail,
-        profilePicture: result.profilepicture || '',
-      };
-      console.log('User object:', user);
-
+      
+      // Store only token in localStorage
       localStorage.setItem('token', result.token);
-      localStorage.setItem('empid', result.employeeId);
-      localStorage.setItem('name', result.name);
-      localStorage.setItem('role', result.role);
-      localStorage.setItem('email', credentials.officeEmail);
-      localStorage.setItem('profilePicture', result.profilepicture || '');
-      console.log('Stored in localStorage - role:', result.role);
+      
+      // Fetch fresh user details from API
+      const userDetails = await authService.getCurrentUser();
+      const user: User = {
+        employeeId: userDetails.employeeId,
+        name: userDetails.name,
+        role: userDetails.role,
+        email: userDetails.email,
+        profilePicture: userDetails.profilePicture,
+      };
 
       dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token: result.token } });
     } catch (error) {
@@ -120,11 +118,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('empid');
-    localStorage.removeItem('name');
-    localStorage.removeItem('role');
-    localStorage.removeItem('email');
-    localStorage.removeItem('profilePicture');
     dispatch({ type: 'LOGOUT' });
   };
 

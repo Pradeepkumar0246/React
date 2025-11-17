@@ -3,7 +3,6 @@ import {
   Avatar,
   Box,
   Button,
-  Chip,
   Container,
   Dialog,
   DialogActions,
@@ -23,14 +22,22 @@ import {
   TableHead,
   TableRow,
   TextField,
-  Tooltip,
   Typography,
   Checkbox,
 } from "@mui/material";
 import { Add, Delete, Edit, Visibility, Search } from "@mui/icons-material";
 import { useAuth } from "../auth/AuthContext";
 import { employeeService } from "../services/employeeService";
-import { validateEmail, validateMobileNumber, validateRequired, validateStringLength, validateLettersOnly, validatePassword, validateFileSize, validateFileType } from "../utils/validation";
+import {
+  validateEmail,
+  validateMobileNumber,
+  validateRequired,
+  validateStringLength,
+  validateLettersOnly,
+  validatePassword,
+  validateFileSize,
+  validateFileType,
+} from "../utils/validation";
 import type {
   Employee,
   EmployeeFilters,
@@ -51,7 +58,6 @@ type FormState = {
   password: string;
   reportingManagerId: string;
 };
-const rowsPerPage = 10;
 
 const Employees: React.FC = () => {
   const { user } = useAuth();
@@ -88,7 +94,7 @@ const Employees: React.FC = () => {
     reportingManagerId: "",
   });
   const [file, setFile] = useState<File | null>(null);
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -137,15 +143,17 @@ const Employees: React.FC = () => {
   );
 
   const paginated = useMemo(
-    () => filtered.slice((page - 1) * rowsPerPage, page * rowsPerPage),
+    () => filtered.slice((page - 1) * 10, page * 10),
     [filtered, page]
   );
 
-  useEffect(() => {
-    setSelected((prev) =>
-      prev.filter((id) => paginated.some((p) => p.employeeId === id))
-    );
-  }, [paginated]);
+  useEffect(
+    () =>
+      setSelected((prev) =>
+        prev.filter((id) => paginated.some((p) => p.employeeId === id))
+      ),
+    [paginated]
+  );
 
   const handleSelectAll = (checked: boolean) =>
     setSelected(checked ? paginated.map((p) => p.employeeId) : []);
@@ -155,97 +163,96 @@ const Employees: React.FC = () => {
     setViewEmployee(emp);
     setViewOpen(true);
   };
+  const updateField = (field: keyof FormState, value: string) => {
+    setForm((s) => ({ ...s, [field]: value }));
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
   const handleOpenForm = (emp?: Employee) => {
     setEditEmployee(emp ?? null);
-    if (emp) {
-      setForm({
-        firstName: emp.firstName ?? "",
-        lastName: emp.lastName ?? "",
-        mobileNumber: emp.mobileNumber ?? "",
-        personalEmail: emp.personalEmail ?? "",
-        officeEmail: emp.officeEmail ?? "",
-        departmentId: String(emp.departmentId ?? ""),
-        roleId: String(emp.roleId ?? ""),
-        employmentType: emp.employmentType ?? "FullTime",
-        dateOfJoining: emp.dateOfJoining ? emp.dateOfJoining.split("T")[0] : "",
-        password: "",
-        reportingManagerId: emp.reportingManagerId ?? "",
-      });
-    } else {
-      setForm({
-        firstName: "",
-        lastName: "",
-        mobileNumber: "",
-        personalEmail: "",
-        officeEmail: "",
-        departmentId: "",
-        roleId: "",
-        employmentType: "FullTime",
-        dateOfJoining: "",
-        password: "",
-        reportingManagerId: "",
-      });
-    }
+    setForm(
+      emp
+        ? {
+            firstName: emp.firstName ?? "",
+            lastName: emp.lastName ?? "",
+            mobileNumber: emp.mobileNumber ?? "",
+            personalEmail: emp.personalEmail ?? "",
+            officeEmail: emp.officeEmail ?? "",
+            departmentId: String(emp.departmentId ?? ""),
+            roleId: String(emp.roleId ?? ""),
+            employmentType: emp.employmentType ?? "FullTime",
+            dateOfJoining: emp.dateOfJoining
+              ? emp.dateOfJoining.split("T")[0]
+              : "",
+            password: "",
+            reportingManagerId: emp.reportingManagerId ?? "",
+          }
+        : {
+            firstName: "",
+            lastName: "",
+            mobileNumber: "",
+            personalEmail: "",
+            officeEmail: "",
+            departmentId: "",
+            roleId: "",
+            employmentType: "FullTime",
+            dateOfJoining: "",
+            password: "",
+            reportingManagerId: "",
+          }
+    );
     setFile(null);
     setOpenForm(true);
   };
 
   const validateForm = (): boolean => {
-    const newErrors: {[key: string]: string} = {};
-    
-    // Validate required fields
-    const firstNameError = validateRequired(form.firstName, 'First Name') || validateStringLength(form.firstName, 2, 50, 'First Name') || validateLettersOnly(form.firstName, 'First Name');
-    if (firstNameError) newErrors.firstName = firstNameError;
-    
-    const lastNameError = validateRequired(form.lastName, 'Last Name') || validateStringLength(form.lastName, 2, 50, 'Last Name') || validateLettersOnly(form.lastName, 'Last Name');
-    if (lastNameError) newErrors.lastName = lastNameError;
-    
-    const mobileError = validateMobileNumber(form.mobileNumber);
-    if (mobileError) newErrors.mobileNumber = mobileError;
-    
-    const personalEmailError = validateEmail(form.personalEmail);
-    if (personalEmailError) newErrors.personalEmail = personalEmailError;
-    
-    const officeEmailError = validateEmail(form.officeEmail);
-    if (officeEmailError) newErrors.officeEmail = officeEmailError;
-    
-    const deptError = validateRequired(form.departmentId, 'Department');
-    if (deptError) newErrors.departmentId = deptError;
-    
-    const roleError = validateRequired(form.roleId, 'Role');
-    if (roleError) newErrors.roleId = roleError;
-    
-    const dateError = validateRequired(form.dateOfJoining, 'Date of Joining');
-    if (dateError) newErrors.dateOfJoining = dateError;
-    
-    if (!editEmployee) {
-      const passwordError = validatePassword(form.password);
-      if (passwordError) newErrors.password = passwordError;
-    }
-    
-    if (file) {
-      const fileSizeError = validateFileSize(file, 5);
-      if (fileSizeError) newErrors.file = fileSizeError;
-      
-      const fileTypeError = validateFileType(file, ['jpg', 'jpeg', 'png', 'gif']);
-      if (fileTypeError) newErrors.file = fileTypeError;
-    }
-    
+    const newErrors: { [key: string]: string } = {};
+    const addError = (field: string, ...validators: (string | null)[]) => {
+      const error = validators.find((v) => v);
+      if (error) newErrors[field] = error;
+    };
+    addError(
+      "firstName",
+      validateRequired(form.firstName, "First Name"),
+      validateStringLength(form.firstName, 2, 50, "First Name"),
+      validateLettersOnly(form.firstName, "First Name")
+    );
+    addError(
+      "lastName",
+      validateRequired(form.lastName, "Last Name"),
+      validateStringLength(form.lastName, 2, 50, "Last Name"),
+      validateLettersOnly(form.lastName, "Last Name")
+    );
+    addError("mobileNumber", validateMobileNumber(form.mobileNumber));
+    addError("personalEmail", validateEmail(form.personalEmail));
+    addError("officeEmail", validateEmail(form.officeEmail));
+    addError("departmentId", validateRequired(form.departmentId, "Department"));
+    addError("roleId", validateRequired(form.roleId, "Role"));
+    addError(
+      "dateOfJoining",
+      validateRequired(form.dateOfJoining, "Date of Joining")
+    );
+    if (!editEmployee) addError("password", validatePassword(form.password));
+    if (file)
+      addError(
+        "file",
+        validateFileSize(file, 5),
+        validateFileType(file, ["jpg", "jpeg", "png", "gif"])
+      );
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-    
     try {
       setIsSubmitting(true);
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
       if (file) fd.append("profilePicture", file);
-      if (editEmployee)
-        await employeeService.updateEmployee(editEmployee.employeeId, fd);
-      else await employeeService.createEmployee(fd);
+      editEmployee
+        ? await employeeService.updateEmployee(editEmployee.employeeId, fd)
+        : await employeeService.createEmployee(fd);
       await loadData();
       setOpenForm(false);
       setErrors({});
@@ -313,12 +320,16 @@ const Employees: React.FC = () => {
               value={filters.departmentId ?? ""}
               label="Department"
               onChange={(e) =>
-                setFilters((s) => ({ ...s, departmentId: e.target.value }))
+                setFilters((s) => ({
+                  ...s,
+                  departmentId:
+                    e.target.value === "" ? "" : Number(e.target.value),
+                }))
               }
             >
               <MenuItem value="">All</MenuItem>
               {departments.map((d) => (
-                <MenuItem key={d.departmentId} value={String(d.departmentId)}>
+                <MenuItem key={d.departmentId} value={d.departmentId}>
                   {d.departmentName}
                 </MenuItem>
               ))}
@@ -330,12 +341,15 @@ const Employees: React.FC = () => {
               value={filters.roleId ?? ""}
               label="Role"
               onChange={(e) =>
-                setFilters((s) => ({ ...s, roleId: e.target.value }))
+                setFilters((s) => ({
+                  ...s,
+                  roleId: e.target.value === "" ? "" : Number(e.target.value),
+                }))
               }
             >
               <MenuItem value="">All</MenuItem>
               {roles.map((r) => (
-                <MenuItem key={r.roleId} value={String(r.roleId)}>
+                <MenuItem key={r.roleId} value={r.roleId}>
                   {r.roleName}
                 </MenuItem>
               ))}
@@ -347,7 +361,10 @@ const Employees: React.FC = () => {
               value={filters.status ?? ""}
               label="Status"
               onChange={(e) =>
-                setFilters((s) => ({ ...s, status: e.target.value }))
+                setFilters((s) => ({
+                  ...s,
+                  status: e.target.value as "Active" | "Inactive" | "",
+                }))
               }
             >
               <MenuItem value="">All</MenuItem>
@@ -355,34 +372,15 @@ const Employees: React.FC = () => {
               <MenuItem value="Inactive">Inactive</MenuItem>
             </Select>
           </FormControl>
-          <TextField
-            type="date"
-            label="From"
-            value={filters.fromDate ?? ""}
-            onChange={(e) =>
-              setFilters((s) => ({ ...s, fromDate: e.target.value }))
-            }
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            type="date"
-            label="To"
-            value={filters.toDate ?? ""}
-            onChange={(e) =>
-              setFilters((s) => ({ ...s, toDate: e.target.value }))
-            }
-            InputLabelProps={{ shrink: true }}
-          />
         </Box>
       </Paper>
 
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-        <Box>
+        <Box sx={{ display: "flex", gap: 2 }}>
           {isAdmin && (
             <Button
               variant="contained"
               startIcon={<Add />}
-              sx={{ mr: 2 }}
               onClick={() => handleOpenForm()}
             >
               Add Employee
@@ -425,8 +423,6 @@ const Employees: React.FC = () => {
               <TableCell>Employee</TableCell>
               <TableCell>Department</TableCell>
               <TableCell>Role</TableCell>
-              <TableCell>Employment Type</TableCell>
-              <TableCell>Joining Date</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -464,43 +460,27 @@ const Employees: React.FC = () => {
                 </TableCell>
                 <TableCell>{emp.departmentName}</TableCell>
                 <TableCell>{emp.roleName}</TableCell>
-                <TableCell>{emp.employmentType}</TableCell>
-                <TableCell>
-                  {new Date(emp.dateOfJoining).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={emp.status}
-                    color={emp.status === "Active" ? "success" : "default"}
-                    size="small"
-                  />
-                </TableCell>
+                <TableCell>{emp.status}</TableCell>
                 <TableCell>
                   <Box sx={{ display: "flex", gap: 1 }}>
-                    <Tooltip title="View Details">
-                      <IconButton size="small" onClick={() => handleView(emp)}>
-                        <Visibility />
-                      </IconButton>
-                    </Tooltip>
+                    <IconButton size="small" onClick={() => handleView(emp)}>
+                      <Visibility />
+                    </IconButton>
                     {isAdmin && (
                       <>
-                        <Tooltip title="Edit">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleOpenForm(emp)}
-                          >
-                            <Edit />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleDelete(emp.employeeId)}
-                          >
-                            <Delete />
-                          </IconButton>
-                        </Tooltip>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleOpenForm(emp)}
+                        >
+                          <Edit />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleDelete(emp.employeeId)}
+                        >
+                          <Delete />
+                        </IconButton>
                       </>
                     )}
                   </Box>
@@ -513,7 +493,7 @@ const Employees: React.FC = () => {
 
       <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
         <Pagination
-          count={Math.ceil(filtered.length / rowsPerPage)}
+          count={Math.ceil(filtered.length / 10)}
           page={page}
           onChange={(_, p) => setPage(p)}
           color="primary"
@@ -541,14 +521,7 @@ const Employees: React.FC = () => {
             <TextField
               label="First Name"
               value={form.firstName}
-              onChange={(e) => {
-                setForm((s) => ({ ...s, firstName: e.target.value }));
-                if (errors.firstName) setErrors(prev => ({...prev, firstName: ''}));
-              }}
-              onBlur={() => {
-                const error = validateRequired(form.firstName, 'First Name') || validateStringLength(form.firstName, 2, 50, 'First Name') || validateLettersOnly(form.firstName, 'First Name');
-                if (error) setErrors(prev => ({...prev, firstName: error}));
-              }}
+              onChange={(e) => updateField("firstName", e.target.value)}
               error={!!errors.firstName}
               helperText={errors.firstName}
               required
@@ -556,14 +529,7 @@ const Employees: React.FC = () => {
             <TextField
               label="Last Name"
               value={form.lastName}
-              onChange={(e) => {
-                setForm((s) => ({ ...s, lastName: e.target.value }));
-                if (errors.lastName) setErrors(prev => ({...prev, lastName: ''}));
-              }}
-              onBlur={() => {
-                const error = validateRequired(form.lastName, 'Last Name') || validateStringLength(form.lastName, 2, 50, 'Last Name') || validateLettersOnly(form.lastName, 'Last Name');
-                if (error) setErrors(prev => ({...prev, lastName: error}));
-              }}
+              onChange={(e) => updateField("lastName", e.target.value)}
               error={!!errors.lastName}
               helperText={errors.lastName}
               required
@@ -571,14 +537,7 @@ const Employees: React.FC = () => {
             <TextField
               label="Mobile Number"
               value={form.mobileNumber}
-              onChange={(e) => {
-                setForm((s) => ({ ...s, mobileNumber: e.target.value }));
-                if (errors.mobileNumber) setErrors(prev => ({...prev, mobileNumber: ''}));
-              }}
-              onBlur={() => {
-                const error = validateMobileNumber(form.mobileNumber);
-                if (error) setErrors(prev => ({...prev, mobileNumber: error}));
-              }}
+              onChange={(e) => updateField("mobileNumber", e.target.value)}
               error={!!errors.mobileNumber}
               helperText={errors.mobileNumber}
               required
@@ -587,14 +546,7 @@ const Employees: React.FC = () => {
               label="Personal Email"
               type="email"
               value={form.personalEmail}
-              onChange={(e) => {
-                setForm((s) => ({ ...s, personalEmail: e.target.value }));
-                if (errors.personalEmail) setErrors(prev => ({...prev, personalEmail: ''}));
-              }}
-              onBlur={() => {
-                const error = validateEmail(form.personalEmail);
-                if (error) setErrors(prev => ({...prev, personalEmail: error}));
-              }}
+              onChange={(e) => updateField("personalEmail", e.target.value)}
               error={!!errors.personalEmail}
               helperText={errors.personalEmail}
               required
@@ -603,14 +555,7 @@ const Employees: React.FC = () => {
               label="Office Email"
               type="email"
               value={form.officeEmail}
-              onChange={(e) => {
-                setForm((s) => ({ ...s, officeEmail: e.target.value }));
-                if (errors.officeEmail) setErrors(prev => ({...prev, officeEmail: ''}));
-              }}
-              onBlur={() => {
-                const error = validateEmail(form.officeEmail);
-                if (error) setErrors(prev => ({...prev, officeEmail: error}));
-              }}
+              onChange={(e) => updateField("officeEmail", e.target.value)}
               error={!!errors.officeEmail}
               helperText={errors.officeEmail}
               required
@@ -620,10 +565,7 @@ const Employees: React.FC = () => {
               <Select
                 value={form.departmentId}
                 label="Department *"
-                onChange={(e) => {
-                  setForm((s) => ({ ...s, departmentId: e.target.value }));
-                  if (errors.departmentId) setErrors(prev => ({...prev, departmentId: ''}));
-                }}
+                onChange={(e) => updateField("departmentId", e.target.value)}
               >
                 {departments.map((d) => (
                   <MenuItem key={d.departmentId} value={String(d.departmentId)}>
@@ -637,10 +579,7 @@ const Employees: React.FC = () => {
               <Select
                 value={form.roleId}
                 label="Role *"
-                onChange={(e) => {
-                  setForm((s) => ({ ...s, roleId: e.target.value }));
-                  if (errors.roleId) setErrors(prev => ({...prev, roleId: ''}));
-                }}
+                onChange={(e) => updateField("roleId", e.target.value)}
               >
                 {roles.map((r) => (
                   <MenuItem key={r.roleId} value={String(r.roleId)}>
@@ -668,10 +607,7 @@ const Employees: React.FC = () => {
               type="date"
               label="Date of Joining"
               value={form.dateOfJoining}
-              onChange={(e) => {
-                setForm((s) => ({ ...s, dateOfJoining: e.target.value }));
-                if (errors.dateOfJoining) setErrors(prev => ({...prev, dateOfJoining: ''}));
-              }}
+              onChange={(e) => updateField("dateOfJoining", e.target.value)}
               error={!!errors.dateOfJoining}
               helperText={errors.dateOfJoining}
               InputLabelProps={{ shrink: true }}
@@ -682,14 +618,7 @@ const Employees: React.FC = () => {
                 type="password"
                 label="Password"
                 value={form.password}
-                onChange={(e) => {
-                  setForm((s) => ({ ...s, password: e.target.value }));
-                  if (errors.password) setErrors(prev => ({...prev, password: ''}));
-                }}
-                onBlur={() => {
-                  const error = validatePassword(form.password);
-                  if (error) setErrors(prev => ({...prev, password: error}));
-                }}
+                onChange={(e) => updateField("password", e.target.value)}
                 error={!!errors.password}
                 helperText={errors.password}
                 required
@@ -719,17 +648,21 @@ const Employees: React.FC = () => {
               inputProps={{ accept: "image/*" }}
               onChange={(e) => {
                 setFile((e.target as HTMLInputElement).files?.[0] ?? null);
-                if (errors.file) setErrors(prev => ({...prev, file: ''}));
+                if (errors.file) setErrors((prev) => ({ ...prev, file: "" }));
               }}
               error={!!errors.file}
-              helperText={errors.file || 'JPG, PNG, GIF only. Max 5MB'}
+              helperText={errors.file || "JPG, PNG, GIF only. Max 5MB"}
             />
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenForm(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : (editEmployee ? "Update" : "Create")}
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Saving..." : editEmployee ? "Update" : "Create"}
           </Button>
         </DialogActions>
       </Dialog>

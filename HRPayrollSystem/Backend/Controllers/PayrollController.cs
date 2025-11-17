@@ -153,7 +153,7 @@ namespace HRPayrollSystem_Payslip.Controllers
                 var result = await _payrollService.DeletePayrollAsync(id);
                 if (result)
                 {
-                    return NoContent();
+                    return Ok(new { message = "Payroll deleted successfully" });
                 }
 
                 return NotFound(new { message = "Payroll not found." });

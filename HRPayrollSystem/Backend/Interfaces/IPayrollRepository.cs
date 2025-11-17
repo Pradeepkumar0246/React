@@ -18,5 +18,6 @@ namespace HRPayrollSystem_Payslip.Interfaces
         Task<Payslip> CreatePayslipAsync(Payslip payslip);
         Task<IEnumerable<Attendance>> GetAttendanceRecordsAsync(string employeeId, DateTime startDate, DateTime endDate);
         Task<IEnumerable<LeaveRequest>> GetLeaveRecordsAsync(string employeeId, DateTime startDate, DateTime endDate);
+        Task<Employee?> GetEmployeeByIdAsync(string employeeId);
     }
 }
